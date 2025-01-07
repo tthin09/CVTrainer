@@ -48,9 +48,9 @@ with mp_pose.Pose(
     
     # preprocess frame
     height, width, temp = image.shape
-    image = cv.resize(image, (1280, 720))
+    image = cv.resize(image, (608, 1080))
     temp = 200
-    image = image[:, temp:(1280-temp)]
+    image = image[250:1020, :]
     image = cv.flip(image, 1)
 
     # To improve performance, optionally mark the image as not writeable to

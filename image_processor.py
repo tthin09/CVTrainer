@@ -51,11 +51,16 @@ class FPSCounter:
     print(f"Mean: {np.mean(data)}")
     print(f"Median: {np.median(data)}")
 
+CURLS_LM = [12, 14, 16, 11, 13, 15]
+CURLS_LINES = [(14, 12), (14, 16), (13, 11), (13, 15)]
+
+SQUATS_LM = [23, 25, 27, 24, 26, 28]
+SQUATS_LINES = [(25, 23), (25, 27), (26, 24), (26, 28)]
 
 class ImageProcessor:
   def __init__(self):
-    self.curls_lm = [12, 14, 16, 11, 13, 15]
-    self.curls_lines = [(14, 12), (14, 16), (13, 11), (13, 15)]
+    self.curls_lm = SQUATS_LM
+    self.curls_lines = SQUATS_LINES
     self.joints = {}
     self.thresh_offset = 5
     self.min_thresh = 20 + self.thresh_offset
