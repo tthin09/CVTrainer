@@ -103,9 +103,9 @@ class ImageProcessor:
     self.drawJoints()
     self.drawLines()
     self.drawAngleText()
-    #self.drawProgressBar()
-    #self.drawRepCount()
-    #self.drawMode()
+    self.drawProgressBar()
+    self.drawRepCount()
+    self.drawMode()
 
   def drawJoints(self):
     for key, center in self.joints.items():
