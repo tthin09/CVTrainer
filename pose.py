@@ -42,13 +42,15 @@ with mp_pose.Pose(
     if not success:
       print("Ignoring empty camera frame.")
       if is_video:
-        image_processor.drawGraph()
+        image_processor.end()
         break
       continue
     
     # preprocess frame
     height, width, temp = image.shape
     image = cv.resize(image, (1280, 720))
+    temp = 200
+    image = image[:, temp:(1280-temp)]
     image = cv.flip(image, 1)
 
     # To improve performance, optionally mark the image as not writeable to
@@ -61,15 +63,16 @@ with mp_pose.Pose(
       continue
         
     image_processor.loadImage(image, results.pose_landmarks)
-    image_processor.drawEverything()  
+    image_processor.process() 
       
     cv.imshow('MediaPipe Pose', image)
     key = cv.waitKey(5)
     if key & 0xFF == 27: # ESC key
-      image_processor.drawGraph()
+      image_processor.end()
       break
     if key & 0xFF == 32: # Space key
       image_processor.toggleMode()
     
   
 cap.release()
+

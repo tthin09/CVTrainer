@@ -14,7 +14,7 @@ class Graph:
     self.left_angles.append(left)
     self.right_angles.append(right)
     
-  def drawGraph(self):
+  def plotGraph(self):
     plt.plot(range(len(self.left_angles)), self.left_angles, label="Left Angle")
     plt.plot(range(len(self.right_angles)), self.right_angles, label="Right Angle")
     plt.xlabel("Time")
@@ -22,6 +22,34 @@ class Graph:
     plt.title("Angle of 2 arm in comparison")
     plt.legend()
     plt.show()
+    
+class FPSCounter:
+  def __init__(self):
+    self.prev_time = time.time()
+    self.fps_list = []
+
+  def updateFPS(self):
+    fps = self.getFPS()
+    self.fps_list.append(fps)
+    
+  def getFPS(self):
+    delta = time.time() - self.prev_time
+    self.prev_time = time.time()
+    fps = 1 / delta
+    return fps
+    
+  def plotFPS(self):
+    plt.plot(range(len(self.fps_list)), self.fps_list, label="FPS")
+    plt.xlabel("Time")
+    plt.ylabel("FPS")
+    plt.title("FPS of program")
+    plt.show()
+    
+  def printStats(self):
+    data = np.array(self.fps_list)
+    print("\nFPS info:")
+    print(f"Mean: {np.mean(data)}")
+    print(f"Median: {np.median(data)}")
 
 
 class ImageProcessor:
@@ -33,19 +61,22 @@ class ImageProcessor:
     self.min_thresh = 20 + self.thresh_offset
     self.max_thresh = 160 - self.thresh_offset
     self.font = cv.FONT_HERSHEY_SIMPLEX
+    self.min_thresh_hist = [self.min_thresh]
+    self.max_thresh_hist = [self.max_thresh]
     
     self.image = None
     self.landmarks = None
     self.width = 0
     self.height = 0
     
-    self.mode = "stop"
+    self.mode = "start"
     self.is_in_rep = False
     self.rep_count = 0
     self.start_rep_time = 100
     self.end_rep_time = 100
     
     self.graph = Graph()
+    self.fps_counter = FPSCounter()
     
   def loadImage(self, image, landmarks):
     self.image = image
@@ -63,17 +94,18 @@ class ImageProcessor:
       key = index
       self.joints[key] = center
       
-  def drawEverything(self):
+  def process(self):
     if self.mode == "start":
       self.updateThreshold()
       self.processRepCount()
       self.updateGraph()
+      self.fps_counter.updateFPS()
     self.drawJoints()
     self.drawLines()
     self.drawAngleText()
-    self.drawProgressBar()
-    self.drawRepCount()
-    self.drawMode()
+    #self.drawProgressBar()
+    #self.drawRepCount()
+    #self.drawMode()
 
   def drawJoints(self):
     for key, center in self.joints.items():
@@ -149,8 +181,8 @@ class ImageProcessor:
     if percentage <= 0.03 and self.is_in_rep:
       self.end_rep_time = time.time()
       delta = self.end_rep_time - self.start_rep_time
-      print(delta)
-      if delta > 2:
+      print(f"Rep time: {delta}")
+      if delta >= 2:
         self.rep_count += 1
         self.is_in_rep = False
       
@@ -160,19 +192,25 @@ class ImageProcessor:
       return
     left_angle, right_angle = self.getAngles()
     angle = min(left_angle, right_angle)
+    is_updated = False
     if angle + self.thresh_offset < self.min_thresh:
       print(f"Update min_thresh from {self.min_thresh} to {angle + self.thresh_offset}")
       self.min_thresh = max(20, angle + self.thresh_offset)
+      is_updated = True
     if angle - self.thresh_offset > self.max_thresh:
       print(f"Update max_thresh from {self.max_thresh} to {angle - self.thresh_offset}")
       self.max_thresh = min(160, angle - self.thresh_offset)
+      is_updated = True
+    if is_updated:
+      self.min_thresh_hist.append(self.min_thresh)
+      self.max_thresh_hist.append(self.max_thresh)
       
   def updateGraph(self):
     left_angle, right_angle = self.getAngles()
     self.graph.addData(left_angle, right_angle)
     
-  def drawGraph(self):
-    self.graph.drawGraph()
+  def plotGraph(self):
+    self.graph.plotGraph()
     
   def toggleMode(self):
     if self.mode == "stop":
@@ -183,3 +221,20 @@ class ImageProcessor:
   def drawMode(self):
     cv.rectangle(self.image, (0, 0), (120, 50), BLACK, -1)
     cv.putText(self.image, self.mode.capitalize(), (20, 35), self.font, 1, YELLOW, 2)
+  
+  def plotThresholdAdjust(self):
+    plt.plot(range(len(self.min_thresh_hist)), self.min_thresh_hist, label="Min threshold")
+    plt.xlabel("Time")
+    plt.ylabel("Threshold")
+    plt.title("Min threshold adjustment")
+    plt.show()
+    plt.plot(range(len(self.max_thresh_hist)), self.max_thresh_hist, label="Max threshold", color="orange")
+    plt.xlabel("Time")
+    plt.ylabel("Threshold")
+    plt.title("Max threshold adjustment")
+    plt.show()
+  
+  def end(self):
+    self.plotThresholdAdjust()
+    self.fps_counter.printStats()
+    self.fps_counter.plotFPS()
