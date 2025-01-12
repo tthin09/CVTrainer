@@ -16,14 +16,15 @@ parser.add_argument("--source",
                     default="camera",
                     choices=["camera", "video"],
                     help="Source of input: 'camera' or 'file'")
-parser.add_argument("--video_path",
+parser.add_argument("--video_name",
                     type=str,
-                    default="videos/curls_1.mp4",
-                    help="Path to the video file")
-
-cap = cv.VideoCapture("videos/curls_2.mp4")
-is_video = False
+                    default="curls_1.mp4",
+                    help="Name of video in the videos folder")
 args = parser.parse_args()
+
+video_path = "videos/" + args.video_path
+cap = cv.VideoCapture(video_path)
+is_video = False
 if args.source == "camera":
   cap = cv.VideoCapture(0)
 elif args.source == "video":
